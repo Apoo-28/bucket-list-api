@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Bucket List - Stylish</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    input {
+      padding: 8px;
+      margin: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 200px;
+    }
+    button {
+      padding: 8px 12px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .add-btn {
+      background-color: #4CAF50;
+      color: white;
+    }
+    table {
+      width: 80%;
+      margin: 0 auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    .status-completed {
+      color: green;
+      font-weight: bold;
+    }
+    .status-pending {
+      color: red;
+      font-weight: bold;
+    }
+    .complete-btn {
+      background-color: #28a745;
+      color: white;
+    }
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+    .edit-btn {
+      background-color: #ff9800;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎯 My Stylish Bucket List</h1>
+
+  <form id="bucketForm">
+    <input type="text" id="title" placeholder="Title" required />
+    <input type="text" id="category" placeholder="Category" required />
+    <button type="submit" class="add-btn">Add Item</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="bucketTableBody"></tbody>
+  </table>
+
+  <script>
+    const form = document.getElementById('bucketForm');
+    const tableBody = document.getElementById('bucketTableBody');
+    let editId = null;
+
+    async function fetchItems() {
+      const res = await fetch('http://localhost:5000/api/bucket');
+      const items = await res.json();
+      tableBody.innerHTML = '';
+
+      items.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.title}</td>
+          <td>${item.category}</td>
+          <td class="${item.isCompleted ? 'status-completed' : 'status-pending'}">
+            ${item.isCompleted ? '✅ Completed' : '❌ Pending'}
+          </td>
+          <td>
+            <button class="complete-btn" onclick="markComplete('${item._id}')">✅ Mark Complete</button>
+            <button class="delete-btn" onclick="deleteItem('${item._id}')">🗑️ Delete</button>
+            <button class="edit-btn" onclick="startEdit('${item._id}', '${item.title}', '${item.category}')">✏️ Edit</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const title = document.getElementById('title').value;
+      const category = document.getElementById('category').value;
+
+      if (editId) {
+        await fetch(`http://localhost:5000/api/bucket/${editId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, category })
+        });
+        editId = null;
+      } else {
+        await fetch('http://localhost:5000/api/bucket', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, category })
+        });
+      }
+
+      form.reset();
+      fetchItems();
+    });
+
+    async function markComplete(id) {
+      await fetch(`http://localhost:5000/api/bucket/${id}/complete`, { method: 'PATCH' });
+      fetchItems();
+    }
+
+    async function deleteItem(id) {
+      await fetch(`http://localhost:5000/api/bucket/${id}`, { method: 'DELETE' });
+      fetchItems();
+    }
+
+    function startEdit(id, title, category) {
+      document.getElementById('title').value = title;
+      document.getElementById('category').value = category;
+      editId = id;
+    }
+
+    fetchItems();
+  </script>
+
+</body>
+</html>
