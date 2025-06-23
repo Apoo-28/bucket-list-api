@@ -136,7 +136,7 @@ npm test
 
 ## 🖼️ Test Coverage Screenshot
 
-![Test Coverage](backend\coverage\coverage-screenshot.png)
+![Test Coverage](https://github.com/Apoo-28/bucket-list-api/blob/master/backend/Screenshot%202025-06-24%20001810.png)
 
 ## 🏗️ Project Structure
 
